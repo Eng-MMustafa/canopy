@@ -1,0 +1,87 @@
+<?php
+
+use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Enable Canopy
+    |--------------------------------------------------------------------------
+    |
+    | When disabled, Canopy registers no routes and does not influence Scramble
+    | in any way. Your existing Scramble documentation keeps working untouched.
+    |
+    */
+    'enabled' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scramble API
+    |--------------------------------------------------------------------------
+    |
+    | The name of the Scramble API document Canopy should render. Use this if
+    | you registered additional APIs via Scramble::registerApi().
+    |
+    */
+    'api' => 'default',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Documentation Route
+    |--------------------------------------------------------------------------
+    |
+    | The path where the Canopy explorer is served, and the path of the JSON
+    | OpenAPI document it consumes. Middleware is applied to both routes.
+    |
+    */
+    'route' => [
+        'ui' => 'docs/canopy',
+        'document' => 'docs/canopy.json',
+        'middleware' => [
+            RestrictedDocsAccess::class,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Branding
+    |--------------------------------------------------------------------------
+    |
+    | Make the explorer your own. The logo accepts any URL (or null to show the
+    | title only). The accent color drives links, the active item and badges.
+    |
+    */
+    'branding' => [
+        'title' => 'API Documentation',
+        'logo' => null,
+        'accent' => '#6366f1',
+        'theme' => 'system', // light | dark | system
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Grouping Rules
+    |--------------------------------------------------------------------------
+    |
+    | Optional, ordered rules used to assign a (possibly nested) group to a
+    | route when no #[Group] attribute is present. The first matching rule wins.
+    | Use "/" or ">" in the group name to express nesting.
+    |
+    |   ['group' => 'Admin > Users', 'match' => ['prefix' => 'admin/users/*']],
+    |   ['group' => 'Billing',       'match' => ['middleware' => 'subscribed']],
+    |   ['group' => 'Internal',      'match' => ['namespace' => 'App\\Http\\Controllers\\Internal\\*']],
+    |
+    */
+    'rules' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fallback Group
+    |--------------------------------------------------------------------------
+    |
+    | The group used when nothing else resolves and the controller name cannot
+    | be derived.
+    |
+    */
+    'fallback' => 'General',
+];

@@ -1,0 +1,65 @@
+{
+    "name": "eng-mmustafa/canopy",
+    "description": "Beautiful, hierarchical API documentation for Laravel. A branded, nested endpoint explorer powered by Scramble.",
+    "keywords": [
+        "laravel",
+        "scramble",
+        "openapi",
+        "swagger",
+        "api",
+        "documentation",
+        "api-docs",
+        "groups"
+    ],
+    "homepage": "https://github.com/Eng-MMustafa/canopy",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mohammed Mostafa",
+            "email": "tayar.shaeby@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "dedoc/scramble": "^0.13",
+        "illuminate/contracts": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/support": "^10.0 || ^11.0 || ^12.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0 || ^9.0 || ^10.0",
+        "pestphp/pest": "^2.0 || ^3.0",
+        "laravel/pint": "^1.0",
+        "phpstan/phpstan": "^1.11"
+    },
+    "autoload": {
+        "psr-4": {
+            "Canopy\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Canopy\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint",
+        "analyse": "phpstan analyse"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Canopy\\CanopyServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
