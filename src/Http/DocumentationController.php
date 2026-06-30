@@ -43,8 +43,26 @@ class DocumentationController
      */
     private function spec(): array
     {
+        $this->raiseMemoryLimit();
+
         $api = (string) config('canopy.api', Scramble::DEFAULT_API);
 
         return ($this->generator)(Scramble::getGeneratorConfig($api));
+    }
+
+    /**
+     * Optionally raise the memory limit before generating the document.
+     *
+     * Scramble's analysis can be memory intensive on large applications. When
+     * `canopy.memory_limit` is set, Canopy applies it for this request only so
+     * generation does not fail with a fatal "allowed memory exhausted" error.
+     */
+    private function raiseMemoryLimit(): void
+    {
+        $limit = config('canopy.memory_limit');
+
+        if (is_string($limit) && $limit !== '') {
+            @ini_set('memory_limit', $limit);
+        }
     }
 }

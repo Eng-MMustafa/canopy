@@ -107,6 +107,7 @@ php artisan vendor:publish --tag=canopy-views
 | --- | --- |
 | `enabled` | Master switch. When `false`, Canopy registers nothing. |
 | `api` | Scramble API name (for multi-API setups). |
+| `memory_limit` | PHP memory limit applied to the docs request only (e.g. `1024M`, `-1`). Useful for large apps where generation is memory heavy. `null` keeps the environment default. |
 | `route.ui` | Path of the explorer UI (default `docs/canopy`). |
 | `route.document` | Path of the JSON document Canopy serves. |
 | `route.middleware` | Middleware applied to both routes. |

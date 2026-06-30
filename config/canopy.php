@@ -27,6 +27,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Memory Limit
+    |--------------------------------------------------------------------------
+    |
+    | Scramble analyses your whole route surface to build the OpenAPI document,
+    | which can be memory intensive on large applications and may fail with a
+    | fatal "allowed memory size exhausted" error. Set a PHP memory limit (e.g.
+    | "1024M" or "-1") to apply for the docs request only. Leave null to keep
+    | the environment's default.
+    |
+    */
+    'memory_limit' => null,
+
+    /*
+    |--------------------------------------------------------------------------
     | Documentation Route
     |--------------------------------------------------------------------------
     |
