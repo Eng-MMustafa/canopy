@@ -3,7 +3,7 @@
 namespace Canopy\Http;
 
 use Canopy\CanopyTree;
-use Dedoc\Scramble\CacheableGenerator;
+use Dedoc\Scramble\Generator;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +17,7 @@ use Illuminate\Http\JsonResponse;
 class DocumentationController
 {
     public function __construct(
-        private readonly CacheableGenerator $generator,
+        private readonly Generator $generator,
         private readonly CanopyTree $tree,
     ) {}
 
