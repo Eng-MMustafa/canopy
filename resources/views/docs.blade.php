@@ -395,44 +395,54 @@
                 if (hideStoplightSidebar() || ++hideAttempts > 60) clearInterval(hideInterval);
             }, 100);
 
-            // Inject ::selection into Stoplight shadow roots (CSS can't pierce shadow DOM)
-            const injectedShadowRoots = new WeakSet();
-            const injectSelectionIntoShadows = () => {
+            // ── Inject ::selection into every shadow root (shadow DOM pierce) ──
+            const knownRoots = new WeakSet();
+
+            const selectionCSS = () => {
                 const dark = html.getAttribute('data-theme') === 'dark';
-                const selCSS = dark
-                    ? `::selection { background: rgba(99,102,241,0.55) !important; color: #f8fafc !important; }
-                       ::-moz-selection { background: rgba(99,102,241,0.55) !important; color: #f8fafc !important; }`
+                return dark
+                    ? `*,*::before,*::after{-webkit-user-select:text!important;user-select:text!important}` +
+                      `::selection{background:rgba(99,102,241,.55)!important;color:#f8fafc!important}` +
+                      `::-moz-selection{background:rgba(99,102,241,.55)!important;color:#f8fafc!important}`
                     : '';
-                // Walk all elements and inject into any shadow roots we find
-                const walk = (root) => {
-                    root.querySelectorAll('*').forEach(node => {
-                        if (node.shadowRoot && !injectedShadowRoots.has(node.shadowRoot)) {
-                            const s = document.createElement('style');
-                            s.id = 'canopy-sel';
-                            node.shadowRoot.appendChild(s);
-                            injectedShadowRoots.add(node.shadowRoot);
-                        }
-                        if (node.shadowRoot) {
-                            // update existing style
-                            const existing = node.shadowRoot.getElementById('canopy-sel');
-                            if (existing) existing.textContent = selCSS;
-                            walk(node.shadowRoot);
-                        }
-                    });
-                };
-                walk(document);
             };
-            // Update shadow roots on theme toggle
-            const origApply = applySelectionStyle;
-            const applyAll = () => { origApply(); injectSelectionIntoShadows(); };
-            // Re-assign so toggle button uses the combined function
-            themeBtn.addEventListener('click', () => injectSelectionIntoShadows(), true);
-            // Poll until Stoplight renders its shadow roots then inject
-            let shadowAttempts = 0;
-            const shadowInterval = setInterval(() => {
-                injectSelectionIntoShadows();
-                if (++shadowAttempts > 80) clearInterval(shadowInterval);
-            }, 150);
+
+            const injectIntoRoot = (root) => {
+                if (!root || knownRoots.has(root)) return;
+                knownRoots.add(root);
+                const s = document.createElement('style');
+                s.dataset.canopySel = '1';
+                s.textContent = selectionCSS();
+                root.appendChild(s);
+                // Watch this root for new shadow-bearing children
+                new MutationObserver((mutations) => {
+                    mutations.forEach(m => m.addedNodes.forEach(n => seedNode(n)));
+                }).observe(root, { childList: true, subtree: true });
+            };
+
+            const seedNode = (node) => {
+                if (!(node instanceof Element)) return;
+                if (node.shadowRoot) injectIntoRoot(node.shadowRoot);
+                node.querySelectorAll('*').forEach(child => {
+                    if (child.shadowRoot) injectIntoRoot(child.shadowRoot);
+                });
+            };
+
+            // Update all known injected styles when theme changes
+            const updateShadowStyles = () => {
+                document.querySelectorAll('*').forEach(n => {
+                    if (!n.shadowRoot) return;
+                    const s = n.shadowRoot.querySelector('[data-canopy-sel]');
+                    if (s) s.textContent = selectionCSS();
+                });
+            };
+            themeBtn.addEventListener('click', () => setTimeout(updateShadowStyles, 50));
+
+            // Seed existing DOM + watch for future additions
+            seedNode(document.documentElement);
+            new MutationObserver((mutations) => {
+                mutations.forEach(m => m.addedNodes.forEach(n => seedNode(n)));
+            }).observe(document.body, { childList: true, subtree: true });
 
             // Navigate to a path: update hash then fire events so React Router picks it up
             const navigateTo = (path) => {
