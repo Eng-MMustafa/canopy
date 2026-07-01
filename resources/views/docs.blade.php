@@ -200,8 +200,16 @@
         #canopy-content { flex: 1; height: 100vh; overflow: hidden; }
         #canopy-mount   { height: 100%; display: flex; }
         #canopy-mount elements-api { flex: 1; display: block; min-width: 0; }
-        /* Hide Stoplight's own sidebar */
-        .sl-overflow-y-auto.sl-flex-col.sl-flex-1 > .sl-flex.sl-overflow-y-auto { display: none !important; }
+        /* ── Hide Stoplight's internal sidebar (all known selectors) ── */
+        /* The sidebar is the FIRST direct child of the root flex container */
+        #canopy-mount .sl-flex.sl-overflow-y-auto.sl-flex-col { display: none !important; }
+        #canopy-mount .sl-flex > .sl-flex.sl-overflow-y-auto   { display: none !important; }
+        /* Stoplight v8 sidebar layout wrappers */
+        #canopy-mount [class*="TableOfContents"]  { display: none !important; }
+        #canopy-mount [data-testid="table-of-contents"] { display: none !important; }
+        #canopy-mount aside { display: none !important; }
+        /* Make the content panel fill remaining space */
+        #canopy-mount .sl-flex.sl-flex-1.sl-overflow-y-auto:not([class*="TableOfContents"]) { flex: 1 !important; max-width: 100% !important; }
     </style>
 </head>
 <body>
@@ -267,6 +275,38 @@
             el.setAttribute('hideExport', 'true');
             mountEl.appendChild(el);
             el.apiDescriptionDocument = spec;
+
+            // Hide Stoplight's internal sidebar via JS after it renders
+            // (CSS alone can't reliably target the dynamic classes Stoplight generates)
+            const hideStoplightSidebar = () => {
+                // Find the sidebar: it's the first flex child of the root sl-elements-api container
+                // that contains navigation links (a[href] with /operations/)
+                const root = mountEl.querySelector('elements-api');
+                if (!root) return false;
+                // Try common selectors for the sidebar panel
+                const candidates = root.querySelectorAll(
+                    'aside, nav, [class*="TableOfContents"], [data-testid="table-of-contents"]'
+                );
+                // Also try: first direct child of the main flex wrapper that has overflow-y scroll
+                const flexWrap = root.querySelector('.sl-flex');
+                if (flexWrap) {
+                    const firstChild = flexWrap.children[0];
+                    if (firstChild && firstChild !== flexWrap.children[flexWrap.children.length - 1]) {
+                        firstChild.style.setProperty('display', 'none', 'important');
+                        // Make content panel fill width
+                        const lastChild = flexWrap.children[flexWrap.children.length - 1];
+                        if (lastChild) lastChild.style.setProperty('flex', '1', 'important');
+                        return true;
+                    }
+                }
+                candidates.forEach(n => n.style.setProperty('display', 'none', 'important'));
+                return candidates.length > 0;
+            };
+            // Poll until sidebar appears then hide it
+            let hideAttempts = 0;
+            const hideInterval = setInterval(() => {
+                if (hideStoplightSidebar() || ++hideAttempts > 60) clearInterval(hideInterval);
+            }, 100);
 
             // Navigate to a path: update hash then fire events so React Router picks it up
             const navigateTo = (path) => {
