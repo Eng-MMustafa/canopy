@@ -69,7 +69,15 @@ class CanopyTree
             $uri = '/'.ltrim($route->uri(), '/');
 
             foreach ($route->methods() as $method) {
+                // Full URI key  e.g. get /api/admin/users
                 $index[$this->key($method, $uri)] = $route;
+
+                // Also index without leading api/ and optional version prefix
+                // so spec paths like /admin/users (Scramble strips api/) still match
+                $stripped = (string) preg_replace('#^/api/(?:v\d+/)?#i', '/', $uri);
+                if ($stripped !== $uri) {
+                    $index[$this->key($method, $stripped)] = $route;
+                }
             }
         }
 
