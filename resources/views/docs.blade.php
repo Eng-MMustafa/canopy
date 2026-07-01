@@ -154,17 +154,13 @@
         html[data-theme="dark"] .m-patch,  html[data-theme="system"] .m-patch  { background: #2d1a00; color: #fcd34d; }
         html[data-theme="dark"] .m-delete, html[data-theme="system"] .m-delete { background: #3b0a0a; color: #fca5a5; }
         .canopy-empty { padding: 24px 18px; color: var(--canopy-muted); font-size: 13px; }
-        #canopy-content { flex: 1; height: 100vh; overflow-y: auto; }
-        #canopy-mount { min-height: 100%; }
-        #canopy-mount elements-api { display: block; }
-        /* Hide Stoplight stacked TOC — Canopy sidebar handles navigation */
-        #canopy-mount .sl-elements-api > .sl-flex > div:first-child,
-        #canopy-mount [class*="TableOfContents"],
-        #canopy-mount [data-testid="table-of-contents"],
-        #canopy-mount nav.sl-overflow-y-auto { display: none !important; }
-        /* Full width content panel */
-        #canopy-mount .sl-elements-api > .sl-flex > div:last-child { flex: 1 !important; max-width: 100% !important; width: 100% !important; }
-        #canopy-mount .sl-elements-api > .sl-flex { width: 100% !important; }
+        #canopy-content { flex: 1; height: 100vh; overflow: hidden; position: relative; }
+        #canopy-mount { height: 100%; }
+        #canopy-mount elements-api { display: block; height: 100%; }
+        /* Hide Stoplight's own sidebar — we provide navigation */
+        #canopy-mount .sl-elements-api > div:first-child { display: none !important; }
+        /* Make content panel fill full width */
+        #canopy-mount .sl-elements-api > div:last-child { width: 100% !important; max-width: 100% !important; flex: 1 !important; }
     </style>
 </head>
 <body>
@@ -201,47 +197,25 @@
             const contentEl = document.getElementById('canopy-content');
             const STORAGE   = 'canopy.collapsed';
 
-            // Mount Stoplight and navigate to a specific operation path
-            const mountAt = (path) => {
+            // Create a fresh elements-api at the given hash so React mounts at the right route
+            const mountAt = (hash) => {
+                // Set the URL hash BEFORE creating the element so Stoplight's hash router reads it
+                if (hash && hash !== '/') {
+                    history.replaceState(null, '', '#' + hash);
+                } else if (!window.location.hash) {
+                    history.replaceState(null, '', window.location.pathname);
+                }
                 mountEl.innerHTML = '';
                 const el = document.createElement('elements-api');
-                el.setAttribute('layout', 'stacked');
-                el.setAttribute('router', 'memory');
+                el.setAttribute('layout', 'sidebar');
+                el.setAttribute('router', 'hash');
                 el.setAttribute('hideExport', 'true');
                 mountEl.appendChild(el);
+                // Set spec as object — no extra HTTP request
                 el.apiDescriptionDocument = spec;
-                contentEl.scrollTop = 0;
-
-                // If a specific path requested, wait for Stoplight to render then click its internal link
-                if (path && path !== '/') {
-                    const operationId = path.replace(/^\/operations\//, '');
-                    let attempts = 0;
-                    const interval = setInterval(() => {
-                        attempts++;
-                        const links = mountEl.querySelectorAll('a[href]');
-                        if (attempts === 10) {
-                            // Debug: log all hrefs found at 500ms
-                            console.log('[Canopy] links found:', Array.from(links).map(a => a.getAttribute('href')));
-                            console.log('[Canopy] looking for operationId:', operationId, 'path:', path);
-                        }
-                        for (const a of links) {
-                            const href = a.getAttribute('href') || '';
-                            if (href.includes(operationId) || href === path || href.endsWith(path)) {
-                                console.log('[Canopy] navigating to:', href);
-                                a.click();
-                                clearInterval(interval);
-                                return;
-                            }
-                        }
-                        if (attempts > 40) {
-                            console.log('[Canopy] gave up finding link for:', path);
-                            clearInterval(interval);
-                        }
-                    }, 50);
-                }
             };
 
-            // Restore from URL hash on first load
+            // Initial mount — read current hash
             mountAt(window.location.hash ? window.location.hash.slice(1) : '/');
 
             let collapsed = new Set();
@@ -293,8 +267,8 @@
                 highlight();
             };
 
-            const highlight = () => {
-                const hash = window.location.hash;
+            const highlight = (activePath) => {
+                const hash = activePath ? '#' + activePath : window.location.hash;
                 treeRoot.querySelectorAll('.canopy-route').forEach(a => {
                     a.classList.toggle('active', a.getAttribute('href') === hash);
                 });
@@ -314,8 +288,7 @@
                 if (routeLink) {
                     e.preventDefault();
                     const path = routeLink.dataset.path;
-                    history.pushState(null, '', '#' + path);
-                    highlight();
+                    highlight(path);
                     mountAt(path);
                 }
             });
