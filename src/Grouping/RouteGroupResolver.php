@@ -31,10 +31,16 @@ class RouteGroupResolver implements GroupResolver
             return null;
         }
 
-        // Strip the leading api/ and version (v1, v2, ...) segments.
+        // Strip leading api/ and optional version segment (v1, v2, ...).
         $prefix = (string) preg_replace('#^(?:api/)?(?:v\d+/)?#i', '', $prefix);
 
-        return $this->studlySegments(explode('/', $prefix));
+        // Remove route parameter segments like {id}, {userId}, etc.
+        $segments = array_filter(
+            explode('/', $prefix),
+            fn (string $s) => $s !== '' && ! str_starts_with($s, '{'),
+        );
+
+        return $this->studlySegments(array_values($segments));
     }
 
     /**
