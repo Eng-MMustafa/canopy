@@ -11,8 +11,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title }}</title>
-    <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements@8.1.0/styles.min.css">
-    <script src="https://unpkg.com/@stoplight/elements@8.1.0/web-components.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements@8.5.2/styles.min.css">
+    <script src="https://unpkg.com/@stoplight/elements@8.5.2/web-components.min.js"></script>
     <style>
         :root {
             --canopy-accent: {{ $accent }};
@@ -151,9 +151,12 @@
         html[data-theme="dark"] .m-get, html[data-theme="system"] .m-get { background: #0b3a5e; color: #7dd3fc; }
         .canopy-empty { padding: 24px 18px; color: var(--canopy-muted); font-size: 13px; }
         #canopy-content { flex: 1; height: 100vh; overflow: hidden; }
-        elements-api { display: block; height: 100vh; }
-        /* Hide Stoplight's built-in nav; Canopy provides navigation. */
+        elements-api { display: block; height: 100%; }
+        /* Hide Stoplight's built-in sidebar; Canopy provides navigation. */
         elements-api .sl-elements-api > div:first-child { display: none !important; }
+        elements-api .sl-elements-api > .sl-flex > aside { display: none !important; }
+        elements-api .sl-sidebar-layout > aside { display: none !important; }
+        elements-api [data-testid="table-of-contents"] { display: none !important; }
     </style>
 </head>
 <body>
@@ -254,6 +257,27 @@
                     const id = node.dataset.id;
                     node.classList.contains('collapsed') ? collapsed.add(id) : collapsed.delete(id);
                     persist();
+                    return;
+                }
+                const routeLink = e.target.closest('.canopy-route');
+                if (routeLink) {
+                    e.preventDefault();
+                    const hash = routeLink.getAttribute('href');
+                    if (window.location.hash !== hash) {
+                        history.pushState(null, '', hash);
+                        window.dispatchEvent(new HashChangeEvent('hashchange', {
+                            oldURL: window.location.href.replace(/#.*$/, '') + (window.location.hash || ''),
+                            newURL: window.location.href.replace(/#.*$/, '') + hash,
+                        }));
+                        window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+                    } else {
+                        window.dispatchEvent(new HashChangeEvent('hashchange', {
+                            oldURL: window.location.href,
+                            newURL: window.location.href,
+                        }));
+                    }
+                    document.getElementById('canopy-content').scrollTop = 0;
+                    highlight();
                 }
             });
 
