@@ -210,6 +210,38 @@
         #canopy-mount aside { display: none !important; }
         /* Make the content panel fill remaining space */
         #canopy-mount .sl-flex.sl-flex-1.sl-overflow-y-auto:not([class*="TableOfContents"]) { flex: 1 !important; max-width: 100% !important; }
+
+        /* ── Stoplight dark-mode code block overrides ─────────────────── */
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer,
+        html[data-theme="dark"] #canopy-mount [class*="CodeViewer"],
+        html[data-theme="dark"] #canopy-mount pre {
+            background: #0f172a !important;
+            border: 1px solid #1e293b !important;
+            border-radius: 8px !important;
+        }
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer code,
+        html[data-theme="dark"] #canopy-mount pre code {
+            color: #e2e8f0 !important;
+        }
+        /* String values — soft green */
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer .token.string,
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer .hljs-string { color: #86efac !important; }
+        /* Keys / properties — soft blue */
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer .token.property,
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer .hljs-attr    { color: #93c5fd !important; }
+        /* Numbers — soft orange */
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer .token.number,
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer .hljs-number  { color: #fdba74 !important; }
+        /* Keywords (true/false/null) — soft purple */
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer .token.keyword,
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer .hljs-literal { color: #c4b5fd !important; }
+        /* cURL --flags — accent color */
+        html[data-theme="dark"] #canopy-mount .sl-code-viewer .hljs-symbol  { color: var(--accent) !important; }
+        /* Stoplight panel/card backgrounds in dark mode */
+        html[data-theme="dark"] #canopy-mount .sl-panel,
+        html[data-theme="dark"] #canopy-mount [class*="sl-panel"],
+        html[data-theme="dark"] #canopy-mount .sl-bg-canvas-100 { background: #1e293b !important; }
+        html[data-theme="dark"] #canopy-mount .sl-bg-canvas-200 { background: #0f172a !important; }
     </style>
 </head>
 <body>
