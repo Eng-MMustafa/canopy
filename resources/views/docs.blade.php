@@ -150,13 +150,8 @@
         .m-delete { background: #fee2e2; color: #b91c1c; }
         html[data-theme="dark"] .m-get, html[data-theme="system"] .m-get { background: #0b3a5e; color: #7dd3fc; }
         .canopy-empty { padding: 24px 18px; color: var(--canopy-muted); font-size: 13px; }
-        #canopy-content { flex: 1; height: 100vh; overflow: hidden; }
-        elements-api { display: block; height: 100%; }
-        /* Hide Stoplight's built-in sidebar; Canopy provides navigation. */
-        elements-api .sl-elements-api > div:first-child { display: none !important; }
-        elements-api .sl-elements-api > .sl-flex > aside { display: none !important; }
-        elements-api .sl-sidebar-layout > aside { display: none !important; }
-        elements-api [data-testid="table-of-contents"] { display: none !important; }
+        #canopy-content { flex: 1; height: 100vh; overflow-y: auto; }
+        elements-api { display: block; min-height: 100%; }
     </style>
 </head>
 <body>
@@ -179,7 +174,7 @@
     </aside>
 
     <main id="canopy-content">
-        <elements-api id="canopy-elements" router="hash" layout="sidebar" hideExport="true"></elements-api>
+        <elements-api id="canopy-elements" router="hash" layout="stacked" hideExport="true"></elements-api>
     </main>
 
     <script>
@@ -191,8 +186,9 @@
             const countEl = document.getElementById('canopy-count');
             const STORAGE = 'canopy.collapsed';
 
+            const spec = @json($spec, JSON_UNESCAPED_SLASHES);
             const elements = document.getElementById('canopy-elements');
-            elements.setAttribute('apiDescriptionUrl', documentUrl);
+            elements.apiDescriptionDocument = spec;
 
             let collapsed = new Set();
             try { collapsed = new Set(JSON.parse(localStorage.getItem(STORAGE) || '[]')); } catch (e) {}
