@@ -266,13 +266,21 @@
                 const next   = isDark ? 'light' : 'dark';
                 html.setAttribute('data-theme', next);
                 localStorage.setItem(THEME_KEY, next);
+                // Sync Stoplight's internal theme
+                const stEl = document.querySelector('elements-api');
+                if (stEl) stEl.setAttribute('theme', next);
             });
+
+            // Sync Stoplight's own theme with Canopy's theme
+            const getStoplightTheme = () =>
+                html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
 
             // Mount Stoplight once — sidebar layout, hash router
             const el = document.createElement('elements-api');
             el.setAttribute('layout', 'sidebar');
             el.setAttribute('router', 'hash');
             el.setAttribute('hideExport', 'true');
+            el.setAttribute('theme', getStoplightTheme());
             mountEl.appendChild(el);
             el.apiDescriptionDocument = spec;
 
