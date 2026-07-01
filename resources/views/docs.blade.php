@@ -211,6 +211,20 @@
         /* Make the content panel fill remaining space */
         #canopy-mount .sl-flex.sl-flex-1.sl-overflow-y-auto:not([class*="TableOfContents"]) { flex: 1 !important; max-width: 100% !important; }
 
+        /* ── Text selection in dark mode ──────────────────────────────── */
+        html[data-theme="dark"] ::selection {
+            background: rgba(99, 102, 241, 0.45) !important;
+            color: #f1f5f9 !important;
+        }
+        html[data-theme="dark"] ::-moz-selection {
+            background: rgba(99, 102, 241, 0.45) !important;
+            color: #f1f5f9 !important;
+        }
+        html[data-theme="dark"] #canopy-mount ::selection {
+            background: rgba(99, 102, 241, 0.55) !important;
+            color: #f8fafc !important;
+        }
+
         /* ── Stoplight dark-mode code block overrides ─────────────────── */
         html[data-theme="dark"] #canopy-mount .sl-code-viewer,
         html[data-theme="dark"] #canopy-mount [class*="CodeViewer"],
