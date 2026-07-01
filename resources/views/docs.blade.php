@@ -225,6 +225,25 @@
             color: #f8fafc !important;
         }
 
+        /* ── Force text selection to be visible everywhere in dark mode ── */
+        html[data-theme="dark"] #canopy-mount * {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+        }
+        html[data-theme="dark"] #canopy-mount *::selection {
+            background: rgba(99, 102, 241, 0.55) !important;
+            color: #f8fafc !important;
+        }
+        html[data-theme="dark"] #canopy-mount *::-moz-selection {
+            background: rgba(99, 102, 241, 0.55) !important;
+            color: #f8fafc !important;
+        }
+        /* TryIt body editor textarea */
+        html[data-theme="dark"] #canopy-mount textarea::selection {
+            background: rgba(99, 102, 241, 0.55) !important;
+            color: #f8fafc !important;
+        }
+
         /* ── Stoplight dark-mode code block overrides ─────────────────── */
         html[data-theme="dark"] #canopy-mount .sl-code-viewer,
         html[data-theme="dark"] #canopy-mount [class*="CodeViewer"],
