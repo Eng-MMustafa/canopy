@@ -151,7 +151,8 @@
         html[data-theme="dark"] .m-get, html[data-theme="system"] .m-get { background: #0b3a5e; color: #7dd3fc; }
         .canopy-empty { padding: 24px 18px; color: var(--canopy-muted); font-size: 13px; }
         #canopy-content { flex: 1; height: 100vh; overflow-y: auto; }
-        elements-api { display: block; min-height: 100%; }
+        #canopy-mount { min-height: 100%; }
+        #canopy-mount elements-api { display: block; }
     </style>
 </head>
 <body>
@@ -174,21 +175,35 @@
     </aside>
 
     <main id="canopy-content">
-        <elements-api id="canopy-elements" router="hash" layout="stacked" hideExport="true"></elements-api>
+        <div id="canopy-mount"></div>
     </main>
 
     <script>
         (() => {
-            const tree = @json($tree, JSON_UNESCAPED_SLASHES);
-            const documentUrl = @json($documentUrl);
-            const treeRoot = document.getElementById('canopy-tree');
-            const search = document.getElementById('canopy-search');
-            const countEl = document.getElementById('canopy-count');
-            const STORAGE = 'canopy.collapsed';
+            const tree      = @json($tree, JSON_UNESCAPED_SLASHES);
+            const spec      = @json($spec, JSON_UNESCAPED_SLASHES);
+            const treeRoot  = document.getElementById('canopy-tree');
+            const search    = document.getElementById('canopy-search');
+            const countEl   = document.getElementById('canopy-count');
+            const mountEl   = document.getElementById('canopy-mount');
+            const contentEl = document.getElementById('canopy-content');
+            const STORAGE   = 'canopy.collapsed';
 
-            const spec = @json($spec, JSON_UNESCAPED_SLASHES);
-            const elements = document.getElementById('canopy-elements');
-            elements.apiDescriptionDocument = spec;
+            // Mount Stoplight at a specific path using router=memory + basePath
+            const mountAt = (path) => {
+                mountEl.innerHTML = '';
+                const el = document.createElement('elements-api');
+                el.setAttribute('layout', 'stacked');
+                el.setAttribute('router', 'memory');
+                el.setAttribute('hideExport', 'true');
+                el.setAttribute('basePath', path);
+                mountEl.appendChild(el);
+                el.apiDescriptionDocument = spec;
+                contentEl.scrollTop = 0;
+            };
+
+            // Restore from URL hash on first load
+            mountAt(window.location.hash ? window.location.hash.slice(1) : '/');
 
             let collapsed = new Set();
             try { collapsed = new Set(JSON.parse(localStorage.getItem(STORAGE) || '[]')); } catch (e) {}
@@ -198,17 +213,18 @@
 
             let routeCount = 0;
 
-            const hashFor = (route) => {
-                if (route.operationId) return '#/operations/' + route.operationId;
+            const pathFor = (route) => {
+                if (route.operationId) return '/operations/' + route.operationId;
                 const p = '~1' + String(route.path).replace(/^\//, '').replace(/\//g, '~1');
-                return '#/paths/' + p + '/' + route.method;
+                return '/paths/' + p + '/' + route.method;
             };
+            const hashFor = (route) => '#' + pathFor(route);
 
             const renderRoute = (route, term) => {
                 const label = route.name || (route.method.toUpperCase() + ' ' + route.path);
                 if (term && !label.toLowerCase().includes(term) && !String(route.path).toLowerCase().includes(term)) return '';
                 routeCount++;
-                return `<a class="canopy-row canopy-route" href="${hashFor(route)}" data-id="${esc(route.id)}" title="${esc(route.path)}">
+                return `<a class="canopy-row canopy-route" href="${hashFor(route)}" data-path="${esc(pathFor(route))}" title="${esc(route.path)}">
                     <span class="canopy-method m-${esc(route.method)}">${esc(route.method)}</span>
                     <span class="canopy-label">${esc(label)}</span>
                 </a>`;
@@ -258,22 +274,10 @@
                 const routeLink = e.target.closest('.canopy-route');
                 if (routeLink) {
                     e.preventDefault();
-                    const hash = routeLink.getAttribute('href');
-                    if (window.location.hash !== hash) {
-                        history.pushState(null, '', hash);
-                        window.dispatchEvent(new HashChangeEvent('hashchange', {
-                            oldURL: window.location.href.replace(/#.*$/, '') + (window.location.hash || ''),
-                            newURL: window.location.href.replace(/#.*$/, '') + hash,
-                        }));
-                        window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
-                    } else {
-                        window.dispatchEvent(new HashChangeEvent('hashchange', {
-                            oldURL: window.location.href,
-                            newURL: window.location.href,
-                        }));
-                    }
-                    document.getElementById('canopy-content').scrollTop = 0;
+                    const path = routeLink.dataset.path;
+                    history.pushState(null, '', '#' + path);
                     highlight();
+                    mountAt(path);
                 }
             });
 
@@ -290,7 +294,7 @@
                 const collectIds = (nodes) => nodes.forEach(n => { collapsed.add(n.id); collectIds(n.children || []); });
                 collectIds(tree); persist(); render(search.value.trim().toLowerCase());
             });
-            window.addEventListener('hashchange', highlight);
+            // no hashchange needed — we control navigation via mountAt()
 
             render();
         })();
