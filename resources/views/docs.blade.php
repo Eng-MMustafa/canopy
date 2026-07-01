@@ -148,11 +148,23 @@
         .m-post { background: #dcfce7; color: #15803d; }
         .m-put, .m-patch { background: #fef3c7; color: #b45309; }
         .m-delete { background: #fee2e2; color: #b91c1c; }
-        html[data-theme="dark"] .m-get, html[data-theme="system"] .m-get { background: #0b3a5e; color: #7dd3fc; }
+        html[data-theme="dark"] .m-get,    html[data-theme="system"] .m-get    { background: #0b3a5e; color: #7dd3fc; }
+        html[data-theme="dark"] .m-post,   html[data-theme="system"] .m-post   { background: #052e16; color: #86efac; }
+        html[data-theme="dark"] .m-put,    html[data-theme="system"] .m-put    { background: #2d1a00; color: #fcd34d; }
+        html[data-theme="dark"] .m-patch,  html[data-theme="system"] .m-patch  { background: #2d1a00; color: #fcd34d; }
+        html[data-theme="dark"] .m-delete, html[data-theme="system"] .m-delete { background: #3b0a0a; color: #fca5a5; }
         .canopy-empty { padding: 24px 18px; color: var(--canopy-muted); font-size: 13px; }
         #canopy-content { flex: 1; height: 100vh; overflow-y: auto; }
         #canopy-mount { min-height: 100%; }
         #canopy-mount elements-api { display: block; }
+        /* Hide Stoplight stacked TOC — Canopy sidebar handles navigation */
+        #canopy-mount .sl-elements-api > .sl-flex > div:first-child,
+        #canopy-mount [class*="TableOfContents"],
+        #canopy-mount [data-testid="table-of-contents"],
+        #canopy-mount nav.sl-overflow-y-auto { display: none !important; }
+        /* Full width content panel */
+        #canopy-mount .sl-elements-api > .sl-flex > div:last-child { flex: 1 !important; max-width: 100% !important; width: 100% !important; }
+        #canopy-mount .sl-elements-api > .sl-flex { width: 100% !important; }
     </style>
 </head>
 <body>
@@ -189,17 +201,36 @@
             const contentEl = document.getElementById('canopy-content');
             const STORAGE   = 'canopy.collapsed';
 
-            // Mount Stoplight at a specific path using router=memory + basePath
+            // Mount Stoplight and navigate to a specific operation path
             const mountAt = (path) => {
                 mountEl.innerHTML = '';
                 const el = document.createElement('elements-api');
                 el.setAttribute('layout', 'stacked');
                 el.setAttribute('router', 'memory');
                 el.setAttribute('hideExport', 'true');
-                el.setAttribute('basePath', path);
                 mountEl.appendChild(el);
                 el.apiDescriptionDocument = spec;
                 contentEl.scrollTop = 0;
+
+                // If a specific path requested, wait for Stoplight to render then click its internal link
+                if (path && path !== '/') {
+                    const operationId = path.replace(/^\/operations\//, '');
+                    let attempts = 0;
+                    const interval = setInterval(() => {
+                        attempts++;
+                        // Look for Stoplight's internal anchor matching this operation
+                        const links = mountEl.querySelectorAll('a[href]');
+                        for (const a of links) {
+                            const href = a.getAttribute('href') || '';
+                            if (href.includes(operationId) || href === path) {
+                                a.click();
+                                clearInterval(interval);
+                                return;
+                            }
+                        }
+                        if (attempts > 40) clearInterval(interval); // give up after 2s
+                    }, 50);
+                }
             };
 
             // Restore from URL hash on first load
