@@ -154,13 +154,11 @@
         html[data-theme="dark"] .m-patch,  html[data-theme="system"] .m-patch  { background: #2d1a00; color: #fcd34d; }
         html[data-theme="dark"] .m-delete, html[data-theme="system"] .m-delete { background: #3b0a0a; color: #fca5a5; }
         .canopy-empty { padding: 24px 18px; color: var(--canopy-muted); font-size: 13px; }
-        #canopy-content { flex: 1; height: 100vh; overflow: hidden; position: relative; }
-        #canopy-mount { height: 100%; }
-        #canopy-mount elements-api { display: block; height: 100%; }
-        /* Hide Stoplight's own sidebar — we provide navigation */
-        #canopy-mount .sl-elements-api > div:first-child { display: none !important; }
-        /* Make content panel fill full width */
-        #canopy-mount .sl-elements-api > div:last-child { width: 100% !important; max-width: 100% !important; flex: 1 !important; }
+        #canopy-content { flex: 1; height: 100vh; overflow: hidden; }
+        #canopy-mount { height: 100%; display: flex; }
+        #canopy-mount elements-api { flex: 1; display: block; min-width: 0; }
+        /* Stoplight sidebar hidden — Canopy provides its own */
+        .sl-overflow-y-auto.sl-flex-col.sl-flex-1 > .sl-flex.sl-overflow-y-auto { display: none !important; }
     </style>
 </head>
 <body>
@@ -197,26 +195,24 @@
             const contentEl = document.getElementById('canopy-content');
             const STORAGE   = 'canopy.collapsed';
 
-            // Create a fresh elements-api at the given hash so React mounts at the right route
-            const mountAt = (hash) => {
-                // Set the URL hash BEFORE creating the element so Stoplight's hash router reads it
-                if (hash && hash !== '/') {
-                    history.replaceState(null, '', '#' + hash);
-                } else if (!window.location.hash) {
-                    history.replaceState(null, '', window.location.pathname);
-                }
-                mountEl.innerHTML = '';
-                const el = document.createElement('elements-api');
-                el.setAttribute('layout', 'sidebar');
-                el.setAttribute('router', 'hash');
-                el.setAttribute('hideExport', 'true');
-                mountEl.appendChild(el);
-                // Set spec as object — no extra HTTP request
-                el.apiDescriptionDocument = spec;
-            };
+            // Mount Stoplight once — sidebar layout, hash router
+            const el = document.createElement('elements-api');
+            el.setAttribute('layout', 'sidebar');
+            el.setAttribute('router', 'hash');
+            el.setAttribute('hideExport', 'true');
+            mountEl.appendChild(el);
+            el.apiDescriptionDocument = spec;
 
-            // Initial mount — read current hash
-            mountAt(window.location.hash ? window.location.hash.slice(1) : '/');
+            // Navigate to a path: update hash then fire events so React Router picks it up
+            const navigateTo = (path) => {
+                const newHash = '#' + path;
+                const oldURL  = location.href;
+                const newURL  = location.href.replace(/#.*$/, '') + newHash;
+                history.pushState(null, '', newHash);
+                // Fire both events — Stoplight's internal router listens to one of them
+                window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+                window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL, newURL }));
+            };
 
             let collapsed = new Set();
             try { collapsed = new Set(JSON.parse(localStorage.getItem(STORAGE) || '[]')); } catch (e) {}
@@ -289,7 +285,7 @@
                     e.preventDefault();
                     const path = routeLink.dataset.path;
                     highlight(path);
-                    mountAt(path);
+                    navigateTo(path);
                 }
             });
 
