@@ -218,17 +218,25 @@
                     let attempts = 0;
                     const interval = setInterval(() => {
                         attempts++;
-                        // Look for Stoplight's internal anchor matching this operation
                         const links = mountEl.querySelectorAll('a[href]');
+                        if (attempts === 10) {
+                            // Debug: log all hrefs found at 500ms
+                            console.log('[Canopy] links found:', Array.from(links).map(a => a.getAttribute('href')));
+                            console.log('[Canopy] looking for operationId:', operationId, 'path:', path);
+                        }
                         for (const a of links) {
                             const href = a.getAttribute('href') || '';
-                            if (href.includes(operationId) || href === path) {
+                            if (href.includes(operationId) || href === path || href.endsWith(path)) {
+                                console.log('[Canopy] navigating to:', href);
                                 a.click();
                                 clearInterval(interval);
                                 return;
                             }
                         }
-                        if (attempts > 40) clearInterval(interval); // give up after 2s
+                        if (attempts > 40) {
+                            console.log('[Canopy] gave up finding link for:', path);
+                            clearInterval(interval);
+                        }
                     }, 50);
                 }
             };
