@@ -307,6 +307,19 @@
             const themeBtn  = document.getElementById('canopy-theme');
             const savedTheme = localStorage.getItem(THEME_KEY);
             if (savedTheme) html.setAttribute('data-theme', savedTheme);
+            // Inject ::selection style dynamically so it works inside Stoplight's DOM
+            const selectionStyleEl = document.createElement('style');
+            selectionStyleEl.id = 'canopy-selection-style';
+            document.head.appendChild(selectionStyleEl);
+            const applySelectionStyle = () => {
+                const dark = html.getAttribute('data-theme') === 'dark';
+                selectionStyleEl.textContent = dark
+                    ? `::selection { background: rgba(99,102,241,0.55) !important; color: #f8fafc !important; }
+                       ::-moz-selection { background: rgba(99,102,241,0.55) !important; color: #f8fafc !important; }`
+                    : '';
+            };
+            applySelectionStyle();
+
             themeBtn.addEventListener('click', () => {
                 const isDark = html.getAttribute('data-theme') === 'dark';
                 const next   = isDark ? 'light' : 'dark';
@@ -315,6 +328,7 @@
                 // Sync Stoplight's internal theme
                 const stEl = document.querySelector('elements-api');
                 if (stEl) stEl.setAttribute('theme', next);
+                applySelectionStyle();
             });
 
             // Sync Stoplight's own theme with Canopy's theme
