@@ -41,6 +41,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pre-exported Document
+    |--------------------------------------------------------------------------
+    |
+    | For large applications, generating the OpenAPI document on every request
+    | can be slow or hit memory/tooling limits in the web context. Instead you
+    | can export it once via `php artisan scramble:export --path=...` and point
+    | this at the resulting file. When set to an existing file, Canopy serves it
+    | directly instead of regenerating. Leave null to generate on the fly.
+    |
+    */
+    'document_path' => env('CANOPY_DOCUMENT_PATH'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Documentation Route
     |--------------------------------------------------------------------------
     |

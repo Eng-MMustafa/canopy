@@ -108,12 +108,41 @@ php artisan vendor:publish --tag=canopy-views
 | `enabled` | Master switch. When `false`, Canopy registers nothing. |
 | `api` | Scramble API name (for multi-API setups). |
 | `memory_limit` | PHP memory limit applied to the docs request only (e.g. `1024M`, `-1`). Useful for large apps where generation is memory heavy. `null` keeps the environment default. |
+| `document_path` | Absolute path to a pre-exported OpenAPI JSON file. When set to an existing file, Canopy serves it directly instead of generating on the fly. `null` generates per request. |
 | `route.ui` | Path of the explorer UI (default `docs/canopy`). |
 | `route.document` | Path of the JSON document Canopy serves. |
 | `route.middleware` | Middleware applied to both routes. |
 | `branding.*` | Title, logo, accent, theme. |
 | `rules` | Ordered grouping rules. |
 | `fallback` | Group used when nothing else resolves. |
+
+---
+
+## Large applications
+
+On big codebases, generating the OpenAPI document on every web request can be
+slow or hit PHP's memory limit (the analysis parses your whole route surface).
+You have two options:
+
+**1. Raise the memory limit for the docs request:**
+
+```php
+// config/canopy.php
+'memory_limit' => '1024M', // or '-1'
+```
+
+**2. (Recommended) Serve a pre-exported document.** Generate it once in the CLI
+(where you control memory) and let Canopy serve the file:
+
+```bash
+php -d memory_limit=-1 artisan scramble:export --path=api-docs.json
+```
+
+```dotenv
+CANOPY_DOCUMENT_PATH="/absolute/path/to/api-docs.json"
+```
+
+Re-run the export whenever your API changes (e.g. in your deploy pipeline).
 
 ---
 

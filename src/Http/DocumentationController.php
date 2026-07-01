@@ -43,11 +43,44 @@ class DocumentationController
      */
     private function spec(): array
     {
+        if (($exported = $this->loadExportedDocument()) !== null) {
+            return $exported;
+        }
+
         $this->raiseMemoryLimit();
 
         $api = (string) config('canopy.api', Scramble::DEFAULT_API);
 
         return ($this->generator)(Scramble::getGeneratorConfig($api));
+    }
+
+    /**
+     * Load a pre-exported OpenAPI document when one is configured.
+     *
+     * On large applications, generating the document on every request can be
+     * slow or exhaust memory. Export it once with `php artisan scramble:export`
+     * and point `canopy.document_path` at the resulting file; Canopy will then
+     * serve that file directly instead of regenerating it.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function loadExportedDocument(): ?array
+    {
+        $path = config('canopy.document_path');
+
+        if (! is_string($path) || $path === '' || ! is_file($path)) {
+            return null;
+        }
+
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            return null;
+        }
+
+        $decoded = json_decode($contents, true);
+
+        return is_array($decoded) ? $decoded : null;
     }
 
     /**
